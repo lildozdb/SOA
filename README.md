@@ -27,7 +27,7 @@
   - Order service -> User service
   
 - Асинхронное (повышение отказаустойчивости)
-  Order service после создания заказа побликует событие OrderCreated. Payment service и Notification service выступают консьюмерами
+  - Order service после создания заказа побликует событие OrderCreated. Payment service и Notification service выступают консьюмерами
   
 # 6 - 7 - 8
 ## Модульный монолит
