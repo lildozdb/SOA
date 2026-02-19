@@ -22,7 +22,10 @@
   Данные: Шаблоны уведомлений и логи отправок
 ## Взаимодействие сервисов
 - Синхронное
-  От API Gateway к сервисам. Или, например, Order service синхронно запрашивает Catalog service для проверки наличия товара.
+  - От API Gateway к сервисам
+  - Order service -> Catalog service
+  - Order service -> User service
+  
 - Асинхронное
   Order service после создания заказа побликует событие OrderCreated. Payment service и Notification service выступают консьюмерами
   
