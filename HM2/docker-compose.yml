@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - flyway
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: marketplace
+      POSTGRES_PASSWORD: marketpass
+      POSTGRES_DB: marketplace
+    ports:
+      - "5432:5432"
+
+  flyway:
+    image: flyway/flyway:9-alpine
+    command: -url=jdbc:postgresql://db:5432/marketplace -user=marketplace -password=marketpass -connectRetries=60 migrate
+    volumes:
+      - ./db/migrations:/flyway/sql
+    depends_on:
+      - db
