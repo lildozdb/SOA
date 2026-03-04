@@ -1,0 +1,262 @@
+
+openapi: 3.0.3
+info:
+  title: Marketplace Product OpenAPI
+  description: API сервиса маркетплейса с контрактным подходом и бизнес-логикой
+  version: 1.0.0
+
+paths:
+  /products:
+    post:
+      summary: Создание товара
+      operationId: createProduct
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductCreate'
+      responses:
+        '201':
+
+          description: Товар успешно создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponse'
+
+    get:
+      summary: Список товаров с пагинацией и фильтрацией
+      operationId: getProducts
+      parameters:
+        - name: page
+          in: query
+          description: Номер страницы (начиная с 0)
+          required: false
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+
+        - name: size
+          in: query
+          description: Размер страницы
+          required: false
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+        - name: status
+          in: query
+          description: Фильтрация по статусу
+          required: false
+          schema:
+            $ref: '#/components/schemas/ProductStatus'
+        - name: category
+          in: query
+          description: Фильтрация по категории (точное совпадение)
+          required: false
+          schema:
+
+            type: string
+      responses:
+        '200':
+          description: Успешный ответ со списком товаров
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageProductResponse'
+
+  /products/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    get:
+
+      summary: Получение товара по ID
+      operationId: getProductById
+      responses:
+        '200':
+          description: Товар найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponse'
+        '404':
+          description: Товар не найден
+
+    put:
+      summary: Обновление товара
+      operationId: updateProduct
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+
+              $ref: '#/components/schemas/ProductUpdate'
+      responses:
+        '200':
+          description: Товар успешно обновлен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponse'
+
+    delete:
+      summary: Мягкое удаление (перевод в статус ARCHIVED)
+      operationId: deleteProduct
+      responses:
+        '204':
+          description: Товар успешно переведен в статус ARCHIVED
+
+components:
+
+  schemas:
+    ProductStatus:
+      type: string
+      enum:
+        - ACTIVE
+        - INACTIVE
+        - ARCHIVED
+      description: Состояние товара
+
+    ProductCreate:
+      type: object
+      required:
+        - name
+        - price
+        - stock
+        - category
+        - status
+      properties:
+        name:
+          type: string
+          minLength: 1
+
+          maxLength: 255
+          description: Название товара
+        description:
+          type: string
+          maxLength: 4000
+          nullable: true
+          description: Описание товара
+        price:
+          type: number
+          format: double
+          minimum: 0.01
+          description: Цена товара (> 0)
+        stock:
+          type: integer
+          minimum: 0
+          description: Остаток на складе (>= 0)
+        category:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Категория товара
+
+        status:
+          $ref: '#/components/schemas/ProductStatus'
+
+    ProductUpdate:
+      type: object
+      required:
+        - name
+        - price
+        - stock
+        - category
+        - status
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        description:
+          type: string
+          maxLength: 4000
+          nullable: true
+
+        price:
+          type: number
+          format: double
+          minimum: 0.01
+        stock:
+          type: integer
+          minimum: 0
+        category:
+          type: string
+          minLength: 1
+          maxLength: 100
+        status:
+          $ref: '#/components/schemas/ProductStatus'
+
+    ProductResponse:
+      type: object
+      required:
+        - id
+        - name
+        - price
+
+        - stock
+        - category
+        - status
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Идентификатор товара
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        price:
+          type: number
+          format: double
+        stock:
+          type: integer
+        category:
+
+          type: string
+        status:
+          $ref: '#/components/schemas/ProductStatus'
+        created_at:
+          type: string
+          format: date-time
+          description: Время создания
+        updated_at:
+          type: string
+          format: date-time
+          description: Время обновления
+
+    PageProductResponse:
+      type: object
+      required:
+        - items
+        - totalElements
+        - page
+        - size
+      properties:
+
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductResponse'
+          description: Список товаров
+        totalElements:
+          type: integer
+          description: Общее количество элементов
+        page:
+          type: integer
+          description: Номер текущей страницы
+        size:
+          type: integer
+          description: Размер страницы
