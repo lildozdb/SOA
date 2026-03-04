@@ -1,0 +1,151 @@
+openapi: 3.0.3
+info:
+  title: Marketplace Product API
+  version: 1.0.0
+
+paths:
+  /products:
+    post:
+      summary: Создание товара
+      operationId: createProduct
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductCreate'
+      responses:
+        '201':
+          description: Товар создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponse'
+
+    get:
+      summary: Список товаров с пагинацией и фильтрацией
+      operationId: getProducts
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/ProductStatus'
+        - name: category
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageProductResponse'
+
+  /products/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      summary: Получение товара по ID
+      operationId: getProductById
+      responses:
+        '200':
+          description: Товар найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponse'
+
+    put:
+      summary: Обновление товара
+      operationId: updateProduct
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductUpdate'
+      responses:
+        '200':
+          description: Товар обновлен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponse'
+
+    delete:
+      summary: Мягкое удаление (перевод в статус ARCHIVED)
+      operationId: deleteProduct
+      responses:
+        '204':
+          description: Товар успешно переведен в статус ARCHIVED
+
+components:
+  schemas:
+    ProductStatus:
+      type: string
+      enum: [ACTIVE, INACTIVE, ARCHIVED]
+
+    ProductCreate:
+      type: object
+      required: [name, price, stock, category, status]
+      properties:
+        name: { type: string }
+        description: { type: string, nullable: true }
+        price: { type: number, format: double }
+        stock: { type: integer }
+        category: { type: string }
+        status: { $ref: '#/components/schemas/ProductStatus' }
+
+    ProductUpdate:
+      type: object
+      required: [name, price, stock, category, status]
+      properties:
+        name: { type: string }
+        description: { type: string, nullable: true }
+        price: { type: number, format: double }
+        stock: { type: integer }
+        category: { type: string }
+        status: { $ref: '#/components/schemas/ProductStatus' }
+
+    ProductResponse:
+      type: object
+      required: [id, name, price, stock, category, status, created_at, updated_at]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        description: { type: string, nullable: true }
+        price: { type: number, format: double }
+        stock: { type: integer }
+        category: { type: string }
+        status: { $ref: '#/components/schemas/ProductStatus' }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    PageProductResponse:
+      type: object
+      required: [items, totalElements, page, size]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductResponse'
+        totalElements: { type: integer }
+        page: { type: integer }
+        size: { type: integer }
