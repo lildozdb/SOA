@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  flight_db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: flight_user
+      POSTGRES_PASSWORD: flight_password
+      POSTGRES_DB: flight_db
+      PGDATA: /var/lib/postgresql/data/new_flight_data
+    ports:
+      - "5432:5432"
+  
+  flight_flyway:
+    image: flyway/flyway:9-alpine
+    command: -url=jdbc:postgresql://flight_db:5432/flight_db -user=flight_user -password=flight_password -connectRetries=60 migrate
+    volumes:
+      - ./flight_service/db/migrations:/flyway/sql
+    depends_on:
+      - flight_db
+
+  booking_db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: booking_user
+      POSTGRES_PASSWORD: booking_password
+      POSTGRES_DB: booking_db
+      PGDATA: /var/lib/postgresql/data/new_booking_data
+    ports:
+      - "5433:5432"
+  
+  booking_flyway:
+    image: flyway/flyway:9-alpine
+    command: -url=jdbc:postgresql://booking_db:5432/booking_db -user=booking_user -password=booking_password -connectRetries=60 migrate
+    volumes:
+      - ./booking_service/db/migrations:/flyway/sql
+    depends_on:
+      - booking_db
+  
