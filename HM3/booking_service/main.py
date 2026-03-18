@@ -27,27 +27,35 @@ def create_booking(booking: BookingCreate, db: Session = Depends(get_db)):
         grpc_response = flight_client.ReserveSeats(grpc_request)
         
         if grpc_response.status != flight_pb2.ReservationStatus.ACTIVE:
-            raise HTTPException(
-                status_code=400, 
-                detail="Не удалось забронировать места (недостаточно мест или рейс не найден)"
-            )
+            raise HTTPException(status_code=400, detail="Мест нет")
             
     except grpc.RpcError as e:
-        raise HTTPException(status_code=500, detail=f"Ошибка внутреннего сервиса рейсов: {e.details()}")
+        raise HTTPException(status_code=500, detail=f"Ошибка gRPC: {e.details()}")
 
-    new_booking = DBBooking(
-        id=booking_id,
-        user_id=booking.user_id,
-        flight_id=booking.flight_id,
-        passenger_name=booking.passenger_name,
-        passenger_email=booking.passenger_email,
-        seat_count=booking.seat_count,
-        total_price=booking.total_price,
-        status=BookingStatus.CONFIRMED
-    )
+    try:
+        new_booking = DBBooking(
+            id=booking_id,
+            user_id=booking.user_id,
+            flight_id=booking.flight_id,
+            passenger_name=booking.passenger_name,
+            passenger_email=booking.passenger_email,
+            seat_count=booking.seat_count,
+            total_price=booking.total_price,
+            status=BookingStatus.CONFIRMED
+        )
+        db.add(new_booking)
+        db.commit()
+        
+    except Exception as e:
+        print(f"ОШИБКА СОХРАНЕНИЯ: {e}. Запускаем откат во Flight Service...")
+        db.rollback()
+        
+        rollback_request = flight_pb2.ReleaseReservationRequest(booking_id=str(booking_id))
+        flight_client.ReleaseReservation(rollback_request)
+        
+        raise HTTPException(
+            status_code=500, 
+            detail="Ошибка сохранения брони. Места во Flight Service успешно возвращены (Saga)."
+        )
     
-    db.add(new_booking)
-    db.commit()
-    db.refresh(new_booking)
-    
-    return {"message": "Бронирование успешно создано!", "booking_id": new_booking.id}
+    return {"message": "Успешно!", "booking_id": new_booking.id}
