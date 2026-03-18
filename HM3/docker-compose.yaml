@@ -1,6 +1,28 @@
 version: '3.8'
 
 services:
+
+  flight-service:
+    build: ./flight_service
+    container_name: flight_service
+    ports:
+      - "50051:50051"
+    environment:
+      - DATABASE_URL=postgresql://flight_user:flight_password@flight_db:5432/flight_db
+    depends_on:
+      - flight_db
+
+  booking-service:
+    build: ./booking_service
+    container_name: booking_service
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://booking_user:booking_password@booking_db:5432/booking_db
+    depends_on:
+      - booking_db
+      - flight-service
+
   flight_db:
     image: postgres:15-alpine
     environment:
