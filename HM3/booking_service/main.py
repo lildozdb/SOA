@@ -12,7 +12,7 @@ import flight_pb2_grpc
 
 app = FastAPI(title="Booking Service")
 
-channel = grpc.insecure_channel('localhost:50051')
+channel = grpc.insecure_channel('flight_service:50051')
 flight_client = flight_pb2_grpc.FlightServiceStub(channel)
 
 @app.post("/api/v1/bookings/")
