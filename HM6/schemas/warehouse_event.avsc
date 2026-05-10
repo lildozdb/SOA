@@ -1,0 +1,13 @@
+{
+  "type": "record",
+  "name": "WarehouseEvent",
+  "namespace": "com.warehouse",
+  "fields": [
+    {"name": "event_id", "type": {"type": "string", "logicalType": "uuid"}},
+    [cite_start]{"name": "event_type", "type": "string"}, -- Например, PRODUCT_RECEIVED[span_18](end_span)
+    {"name": "product_id", "type": "string"},
+    {"name": "zone_id", "type": "string"},
+    {"name": "quantity", "type": "int"},
+    {"name": "timestamp", "type": "long"}
+  ]
+}
